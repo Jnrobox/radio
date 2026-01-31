@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<script>
+    const AppTitleStr = "Online Radio Player";
+    const AppVersionStr = "20260131";
+</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .scroll-container {
+            -ms-overflow-style: none;  /* Internet Explorer 10+ */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .scroll-container::-webkit-scrollbar {
+            display: none;  /* Safari and Chrome */
+        }
+    </style>
+    <link rel="me" href="https://www.blogger.com/profile/13743689659345157638" />
+    <meta name='google-adsense-platform-account' content='ca-host-pub-1556223355139109'/>
+    <meta name='google-adsense-platform-domain' content='blogspot.com'/>
+</head>
+
+<body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-4xl w-full bg-gray-800 rounded-2xl shadow-2xl overflow-hidden md:flex">
+
+        <!-- Radio Player Section -->
+        <div class="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-2 text-white">Radio Player</h1>
+                <p class="text-gray-400 mb-6">Select a station from the list to start listening.</p>
+
+                <div id="player-card" class="bg-gray-700 rounded-xl p-6 shadow-lg transition-all duration-300 transform scale-100">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <img id="station-image" src="https://placehold.co/120x120/1f2937/d1d5db?text=Radio" alt="Station Image" class="w-24 h-24 rounded-full shadow-md object-cover">
+                        <div>
+                            <p id="station-name-display" class="text-xl font-semibold text-white">Not Playing</p>
+                            <p id="station-genre-display" class="text-sm text-gray-400">Select a station to start</p>
+                        </div>
+                    </div>
+
+                    <!-- Track Info -->
+                    <div id="track-info" class="text-center mb-4">
+                        <p id="track-name-display" class="text-lg font-medium text-white"></p>
+                        <p id="artist-name-display" class="text-sm text-gray-400"></p>
+                    </div>
+
+                    <div class="flex justify-center items-center space-x-4 mb-4">
+                        <button id="play-stop-btn" class="p-3 md:p-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl transition-all duration-300">
+                            <svg id="play-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                            </svg>
+                            <svg id="stop-icon" class="w-6 h-6 hidden" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="10" cy="10" r="8" fill="currentColor" />
+                                <rect x="7" y="7" width="6" height="6" fill="#1363ed" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Volume Slider -->
+                    <div class="flex items-center space-x-3 text-gray-400">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9.383 3.007A1 1 0 0110 3v14a1 1 0 01-1.617.755L4.558 13.5H2a1 1 0 01-1-1v-5a1 1 0 011-1h2.558l3.825-4.255a1 1 0 011-.488zM15.424 5.674a.999.999 0 011.366 0 8.001 8.001 0 010 8.652.999.999 0 01-1.366 0 6.001 6.001 0 000-6.652zM13.207 7.892a.999.999 0 011.366 0 4.001 4.001 0 000 4.216.999.999 0 01-1.366 0 2.001 2.001 0 010-2.216z" clip-rule="evenodd"></path></svg>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9.383 3.007A1 1 0 0110 3v14a1 1 0 01-1.617.755L4.558 13.5H2a1 1 0 01-1-1v-5a1 1 0 011-1h2.558L8.383 3.007z" clip-rule="evenodd"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <audio id="audio-player" class="hidden" preload="none"></audio>
+
+            <!-- Status Message Box -->
+            <div id="status-message" class="mt-4 p-4 rounded-xl text-center text-sm font-medium hidden"></div>
+
+        </div>
+
+        <!-- Station List Section -->
+        <div class="w-full md:w-1/2 p-6 md:p-8 bg-gray-700 md:rounded-r-2xl md:rounded-bl-none rounded-b-2xl md:rounded-bl-none overflow-y-auto scroll-container h-[500px]">
+            <h2 class="text-2xl font-bold mb-4 text-white">Stations</h2>
+            <div id="radio-list" class="space-y-4">
+                <!-- Radio stations will be dynamically added here -->
+            </div>
+
+            <hr class="my-4 border-gray-600">
+            <h3 class="text-lg font-semibold text-white mb-2">Add Custom Station</h3>
+            <div class="space-y-2">
+                <input id="custom-name" type="text" placeholder="Station Name" class="w-full p-2 rounded bg-gray-800 text-white">
+                <input id="custom-genre" type="text" placeholder="Genre" class="w-full p-2 rounded bg-gray-800 text-white">
+                <input id="custom-url" type="url" placeholder="Stream URL" class="w-full p-2 rounded bg-gray-800 text-white">
+                <input id="custom-image" type="url" placeholder="Image URL (optional)" class="w-full p-2 rounded bg-gray-800 text-white">
+                <button id="add-station-btn" class="w-full p-2 rounded bg-blue-600 hover:bg-blue-700 text-white">Add Station</button>
+            </div>
+            <div class="flex space-x-2 mt-2">
+                <button id="save-stations" class="flex-1 p-2 rounded bg-green-600 hover:bg-green-700 text-white">Save List</button>
+                <button id="reset-stations" class="flex-1 p-2 rounded bg-red-600 hover:bg-red-700 text-white">Reset to Default</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const getLocalStorageSize = () => {
+            let total = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    total += ((localStorage[key].length + key.length) * 2); // 2 bytes per char
+                }
+            }
+            return total;
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const audioPlayer = document.getElementById('audio-player');
+            const playStopBtn = document.getElementById('play-stop-btn');
+            const playIcon = document.getElementById('play-icon');
+            const stopIcon = document.getElementById('stop-icon');
+            const volumeSlider = document.getElementById('volume-slider');
+            const radioList = document.getElementById('radio-list');
+            const stationNameDisplay = document.getElementById('station-name-display');
+            const stationGenreDisplay = document.getElementById('station-genre-display');
+            const stationImage = document.getElementById('station-image');
+            const trackNameDisplay = document.getElementById('track-name-display');
+            const artistNameDisplay = document.getElementById('artist-name-display');
+            const statusMessage = document.getElementById('status-message');
+
+            let currentPlayingStation = null;
+            let trackUpdateInterval = null;
+
+            const defaultStations = [
+                {
+                    name: 'Lounge FM - Chillout',
+                    genre: 'Chillout',
+                    url: 'https://cast.mediaonline.net.ua/chillout',
+                    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROg8HlW0Yy-OPJsc0dzx4G9WuAKyEQ-xo7tykHP2ZFm9OYv-yKOEs9ECYX8W6qVD6tMFM&usqp=CAU',
+                },
+                {
+                    name: 'Lounge FM',
+                    genre: 'Lounge',
+                    url: 'https://cast.mediaonline.net.ua/loungefm',
+                    image: 'https://static.radioplayer.ua/radioplayer/logo/online/logo_loungefm.png',
+                },
+                {
+                    name: 'Radio Relax UA',
+                    genre: 'Relax',
+                    url: 'https://tavr.tvstitch.com/RadioRelax_Ukr',
+                    image: 'https://static.radioplayer.ua/radioplayer/logo/radiorelax/logo_radiorelax_ukr.jpg',
+                },
+                {
+                    name: 'Інді.UA',
+                    genre: 'Rock',
+                    url: 'https://tavr.tvstitch.com/RadioIndieUA',
+                    image: 'https://static.radioplayer.ua/radioplayer/logo/online/logo_radioindieua.png',
+                },
+                {
+                    name: 'Radio Black',
+                    genre: 'Urban',
+                    url: 'https://tavr.tvstitch.com/RadioBlack',
+                    image: 'https://static.radioplayer.ua/radioplayer/logo/online/logo_radioblack.png',
+                },
+                {
+                    name: 'Radio Roks Український рок',
+                    genre: 'Rock',
+                    url: 'https://tavr.tvstitch.com/RadioROKS_Ukr',
+                    image: 'https://static.radioplayer.ua/radioplayer/logo/radioroks/logo_radioroks_ukr.png',
+                },
+                {
+                    name: 'Radio 101',
+                    genre: 'Lo-Fi',
+                    url: 'https://pub0101.101.ru/stream/pro/aac/64/358',
+                    image: 'https://cdn1.101.ru/proxy/vardata/modules/channel/image/858d69f331f8dafaef7629509bb41dc5.jpg?w=300&h=300&pos=center&q=100&t=1668776576',
+                },
+                {
+                    name: '1.FM - KidsFM Lo-Fi',
+                    genre: 'Lo-Fi',
+                    url: 'https://strm112.1.fm/kidsfm_mobile_mp3',
+                    image: 'https://www.radio.net/300/1fmkidsfm.png?version=4228f07aefbd8a673b91bd58a2b28df4'
+                },
+                {
+                    name: '1.FM - Chillout Lounge',
+                    genre: 'Chillout',
+                    url: 'https://strm112.1.fm/chilloutlounge_mobile_mp3',
+                    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkRD26GgJIgi1wWdtnyzBxprCDJoDk1XOWdg&s',
+                },
+                {
+                    name: '1.FM - Costa Del Mar Chillout',
+                    genre: 'Chillout',
+                    url: 'https://strm112.1.fm/costadelmarchillout_mobile_mp3',
+                    image: 'https://ie.radio.net/300/costadelmar.png?version=7ca58433d02bcd777d68793546345464',
+                },
+                {
+                    name: 'Airport Lounge',
+                    genre: 'Lounge',
+                    url: 'https://stream.pcradio.ru/rad_airprtlongrd-med',
+                    image: 'https://www.radio.net/300/airportloungeradio.jpeg?version=',
+                },
+                {
+                    name: 'Chillout Zone Italy',
+                    genre: 'Chillout',
+                    url: 'https://chilloutzone.stream.laut.fm/chilloutzone?pl=pls&t302=2025-04-19_08-13-58&uuid=56c4bb1f-8e5e-43ab-aab0-51b87999154d',
+                    image: 'https://oetpai.fra1.digitaloceanspaces.com/new_images/onestop_86075119.png',
+                },
+                {
+                    name: '1.FM - Deep House',
+                    genre: 'House',
+                    url: 'https://strm112.1.fm/deephouse_mobile_mp3',
+                    image: 'https://www.radio.net/175/1fmbompsytrance.png?version=518cbab8bc639f7c96e6b4029b776309',
+                },
+                {
+                    name: '1a Chillout',
+                    genre: 'Chillout',
+                    url: 'https://stream03.pcradio.biz/erstea_chill-med',
+                    image: 'https://pcradio.ru/images/stations/61b09c644a33a.jpg',
+                },
+                {
+                    name: 'Lounge Chill 1',
+                    genre: 'Chillout',
+                    url: 'https://stream03.pcradio.biz/lounge_chillout-med',
+                    image: 'https://pcradio.ru/images/stations/61b09ce6c4a7e.jpg',
+                },
+                {
+                    name: 'Lounge Chill 2',
+                    genre: 'Chillout',
+                    url: 'https://stream03.pcradio.biz/lounge_chillout2-med',
+                    image: 'https://pcradio.ru/images/stations/61b09ce6c9f0d.jpg',
+                },
+                {
+                    name: 'Office Chillout 1',
+                    genre: 'Chillout',
+                    url: 'https://stream03.pcradio.biz/office_chillout1-med',
+                    image: 'https://pcradio.ru/images/stations/61b09ce6e68cd.jpg',
+                },
+                {
+                    name: 'Office Chillout 2',
+                    genre: 'Chillout',
+                    url: 'https://stream03.pcradio.biz/office_chillout2-med',
+                    image: 'https://pcradio.ru/images/stations/61b09ce6a4ba4.jpg',
+                },
+                {
+                    name: '1.FM - Cafe',
+                    genre: 'Soft Rock',
+                    url: 'https://strm112.1.fm/caferadio_mobile_mp3',
+                    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEU4f1_fQ0QG8xOOqZw1GWHWTlnV_igrHvRA&s',
+                },
+                {
+                    name: '1.FM - Alternative Rock Hits X',
+                    genre: 'Alternative',
+                    url: 'https://strm112.1.fm/x_mobile_mp3',
+                    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGcRyzFG1RJUrVzRoVyozRv5lCsRrlbL8m8g&s',
+                },
+                {
+                    name: '1.FM - Bops & vibes',
+                    genre: 'Indie',
+                    url: 'https://strm112.1.fm/spanishparty_mobile_mp3',
+                    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbqJxT-xs_cXOHCuLIBQ0kIf4k8KnUSdEoqg&s',
+                },
+                {
+                    name: '1.FM - Bay Smooth Jazz',
+                    genre: 'Jazz',
+                    url: 'https://strm112.1.fm/smoothjazz_mobile_mp3',
+                    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSShdf5KADVJDSdUVU-fgdAPiOgTX3FCiSiSg&s',
+                },
+                {
+                    name: '1.FM - Top 40',
+                    genre: 'Pop',
+                    url: 'https://strm112.1.fm/top40_mobile_mp3',
+                    image: 'https://www.radio.net/300/1fmtop40.png?version=02788072aecfdfcadf3f2cb5e106a85b'
+                },
+                {
+                    name: '1.FM - Afterbeat Electronica',
+                    genre: 'Electronic',
+                    url: 'https://strm112.1.fm/electronica_mobile_mp3',
+                    image: 'https://minio.1cloud.fm:9000/1fm-images/playlist-images/G4UiCHWiCC8TNM89OYSbMQpjH19ny8qIPfcKZm8o.png'
+                },
+                {
+                    name: '1.FM - Top Rap',
+                    genre: 'Rap',
+                    url: 'https://strm112.1.fm/jamz_mobile_mp3',
+                    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7LaET6cB4EshmCzLGgsiza7QnJ4U1hUUZBw&s'
+                },
+                {
+                    name: 'Модель для сборки 1',
+                    genre: 'Audiobooks',
+                    url: 'https://stream03.pcradio.biz/mdsst_ru_1-med',
+                    image: 'https://pcradio.ru/images/stations/62ea3ebab22bb.jpg'
+                },
+            ];
+
+            let stations = [];
+
+            document.title = AppTitleStr;
+            console.log(AppTitleStr + " ver. " + AppVersionStr);
+
+            // Function to display a status message
+            const showStatus = (message, type = 'info') => {
+                statusMessage.textContent = message;
+                statusMessage.classList.remove('hidden', 'bg-red-500', 'bg-green-500', 'bg-blue-500');
+                if (type === 'error') {
+                    statusMessage.classList.add('bg-red-500');
+                } else if (type === 'success') {
+                    statusMessage.classList.add('bg-green-500');
+                } else {
+                    statusMessage.classList.add('bg-blue-500');
+                }
+                setTimeout(() => {
+                    statusMessage.classList.add('hidden');
+                }, 5000);
+            };
+
+            // Function to populate the radio station list
+            const populateList = () => {
+                radioList.innerHTML = '';
+                stations.forEach(station => {
+                    const stationItem = document.createElement('div');
+                    stationItem.className = 'flex items-center space-x-4 p-4 rounded-xl bg-gray-800 hover:bg-gray-600 transition-colors duration-300 cursor-pointer';
+                    stationItem.innerHTML = `
+                        <img src="${station.image}" alt="${station.name}" class="w-12 h-12 rounded-lg object-cover">
+                        <div>
+                            <p class="text-white font-semibold">${station.name}</p>
+                            <p class="text-gray-400 text-sm">${station.genre}</p>
+                        </div>
+                    `;
+                    stationItem.addEventListener('click', () => {
+                        playStation(station);
+                    });
+                    radioList.appendChild(stationItem);
+                });
+            };
+
+            // Function to start the simulated track updates
+            const startTrackUpdates = (station) => {
+                // Clear any existing interval
+                if (trackUpdateInterval) {
+                    clearInterval(trackUpdateInterval);
+                }
+
+                if (station.tracklist && station.tracklist.length > 0) {
+                    let currentTrackIndex = 0;
+
+                    // Update track info immediately
+                    updateTrackInfo(station.tracklist[currentTrackIndex]);
+
+                    // Set interval to change track every 10 seconds (for demo)
+                    trackUpdateInterval = setInterval(() => {
+                        currentTrackIndex = (currentTrackIndex + 1) % station.tracklist.length;
+                        updateTrackInfo(station.tracklist[currentTrackIndex]);
+                    }, 10000);
+                } else {
+                    // Hide track info if not available for this station
+                    updateTrackInfo({ track: 'Now playing info not available', artist: '' });
+                }
+            };
+
+            const updateTrackInfo = (trackData) => {
+                trackNameDisplay.textContent = trackData.track;
+                artistNameDisplay.textContent = trackData.artist;
+            };
+
+            // Function to play a selected station
+            const playStation = (station) => {
+                if (audioPlayer.src === station.url && !audioPlayer.stopped) {
+                    showStatus(`${station.name} is already playing.`, 'info');
+                    return;
+                }
+
+                // Stop the current stream if any
+                if (currentPlayingStation) {
+                    audioPlayer.stopped = true;
+                    audioPlayer.pause();
+                    audioPlayer.src = '';
+                }
+
+                audioPlayer.src = station.url;
+                currentPlayingStation = station;
+                localStorage.setItem('lastStation', JSON.stringify(station));
+                stationNameDisplay.textContent = station.name;
+                stationGenreDisplay.textContent = station.genre;
+                stationImage.src = station.image;
+
+                // Attempt to play the new stream
+                audioPlayer.load();
+                const playPromise = audioPlayer.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        // Playback started successfully
+                        audioPlayer.stopped = false;
+                        updatePlayStopIcon(true);
+                        showStatus(`Now playing: ${station.name}`, 'success');
+                        startTrackUpdates(station); // Start the simulated updates
+                    }).catch(error => {
+                        // Playback failed
+                        updatePlayStopIcon(false);
+                        showStatus(`Failed to play ${station.name}. The link may be broken.`, 'error');
+                        console.error('Playback failed:', error);
+                        // Clear track info if playback fails
+                        updateTrackInfo({ track: 'Playback failed', artist: '' });
+                        if (trackUpdateInterval) {
+                            clearInterval(trackUpdateInterval);
+                        }
+                    });
+                }
+            };
+
+            // Function to update the play/stop button icon
+            const updatePlayStopIcon = (isPlaying) => {
+                if (isPlaying) {
+                    playIcon.classList.add('hidden');
+                    stopIcon.classList.remove('hidden');
+                } else {
+                    playIcon.classList.remove('hidden');
+                    stopIcon.classList.add('hidden');
+                }
+            };
+
+            // Event listener for play/stop button
+            playStopBtn.addEventListener('click', () => {
+                if (currentPlayingStation) {
+                    if (audioPlayer.stopped || audioPlayer.src === '') {
+                        // Restart the last station
+                        playStation(currentPlayingStation);
+                        showStatus(`Resuming: ${currentPlayingStation.name}`, 'info');
+                    } else {
+                        // STOP the playback
+                        audioPlayer.stopped = true;
+                        audioPlayer.pause();
+                        audioPlayer.src = ''; // Clear stream but keep currentPlayingStation
+                        showStatus('Stopped playback.', 'info');
+                        updateTrackInfo({ track: 'Stopped', artist: '' });
+                        // Reset play/stop button to show "play"
+                        playIcon.classList.remove('hidden');
+                        stopIcon.classList.add('hidden');
+                    }
+                } else {
+                    showStatus('Please select a radio station first.', 'info');
+                }
+            });
+
+
+            // Event listeners for audio player status
+            audioPlayer.addEventListener('play', () => {
+                updatePlayStopIcon(true);
+            });
+
+            audioPlayer.addEventListener('stop', () => {
+                updatePlayStopIcon(false);
+                if (trackUpdateInterval) {
+                    clearInterval(trackUpdateInterval);
+                }
+                updateTrackInfo({ track: 'Stopped', artist: '' });
+            });
+
+            audioPlayer.addEventListener('volumechange', () => {
+                const volume = audioPlayer.volume;
+                volumeSlider.value = volume;
+            });
+
+            // Event listener for volume slider
+            volumeSlider.addEventListener('input', () => {
+                audioPlayer.volume = volumeSlider.value;
+                localStorage.setItem('radioPlayerVolume', volumeSlider.value);
+            });
+
+            // Set initial volume
+            const savedVolume = localStorage.getItem('radioPlayerVolume');
+            if (savedVolume !== null) {
+                audioPlayer.volume = savedVolume;
+                volumeSlider.value = savedVolume;
+            } else {
+                audioPlayer.volume = volumeSlider.value;
+            }
+
+            // Populate the list on page load
+            populateList();
+
+            audioPlayer.stopped = true;
+
+            // Restore last station if available
+            const lastStationData = localStorage.getItem('lastStation');
+            if (lastStationData) {
+                const lastStation = JSON.parse(lastStationData);
+                currentPlayingStation = lastStation;
+                stationNameDisplay.textContent = lastStation.name;
+                stationGenreDisplay.textContent = lastStation.genre;
+                stationImage.src = lastStation.image;
+                playStation(lastStation); // auto-play last station on load
+            }
+
+            const usedBytes = getLocalStorageSize();
+            console.log(`LocalStorage using ${(usedBytes / 1024).toFixed(2)} KB`);
+
+
+            // Load stations from localStorage or fallback to defaults
+            const savedStations = localStorage.getItem('stationsList');
+            if (savedStations) {
+                try {
+                    stations = JSON.parse(savedStations);
+                    console.log("[Stations] Loaded from localStorage");
+                } catch (e) {
+                    console.warn("[Stations] Failed to parse saved list, using defaults.");
+                    stations = [...defaultStations];
+                }
+            } else {
+                stations = [...defaultStations];
+            }
+
+            const saveStations = () => {
+                localStorage.setItem('stationsList', JSON.stringify(stations));
+                console.log("[Stations] Saved to localStorage");
+            };
+
+            const addStationBtn = document.getElementById('add-station-btn');
+            const customName = document.getElementById('custom-name');
+            const customGenre = document.getElementById('custom-genre');
+            const customUrl = document.getElementById('custom-url');
+            const customImage = document.getElementById('custom-image');
+
+            // Load custom stations from localStorage
+            let customStations = JSON.parse(localStorage.getItem('customStations')) || [];
+            stations.push(...customStations);
+
+            // Handle adding new station
+            addStationBtn.addEventListener('click', () => {
+                const newStation = {
+                    name: customName.value.trim(),
+                    genre: customGenre.value.trim() || 'Unknown',
+                    url: customUrl.value.trim(),
+                    image: customImage.value.trim() || 'https://placehold.co/100x100?text=Radio'
+                };
+
+                if (!newStation.name || !newStation.url) {
+                    showStatus('Please provide at least name and stream URL.', 'error');
+                    return;
+                }
+
+                stations.push(newStation);
+                customStations.push(newStation);
+                saveStations();
+                localStorage.setItem('customStations', JSON.stringify(customStations));
+
+                populateList(); // refresh list
+                showStatus(`Added station: ${newStation.name}`, 'success');
+
+                // Clear inputs
+                customName.value = '';
+                customGenre.value = '';
+                customUrl.value = '';
+                customImage.value = '';
+            });
+
+            document.getElementById('save-stations').addEventListener('click', () => {
+                saveStations();
+                showStatus("Stations list saved!", "success");
+            });
+
+            document.getElementById('reset-stations').addEventListener('click', () => {
+                stations = [...defaultStations];
+                saveStations();
+                populateList();
+                showStatus("Stations reset to default.", "info");
+            });
+
+        });
+    </script>
+</body>
+</html>
